@@ -218,9 +218,9 @@ DOM
 2. 保持原生实现，不引入构建工具和前端框架
 3. 提交前请在自由模式和小红书模式下分别测试导出功能
 
-## Reference
+## 参考
 
-本项目 fork 自 [xiaolinbaba/madopic](https://github.com/xiaolinbaba/madopic)，感谢原作者的工作。
+本项目 fork 自 [xiaolinbaba/madopic](https://github.com/xiaolinbaba/madopic)
 
 ## 许可证
 
