@@ -145,31 +145,85 @@
                 <input type="file" id="imageInput" accept="image/*" style="display: none;">
                 <div class="editor-with-lines">
                     <pre class="line-numbers" aria-hidden="true"></pre>
-                    <textarea id="markdownInput" placeholder="在这里输入你的 Markdown 内容..."># 欢迎使用 Md2Pic
+                    <textarea id="markdownInput" placeholder="在这里输入你的 Markdown 内容..."># Md2Pic Feature Showcase
 
-> Markdown 转图片工具
+> Render Markdown. Export pixels. Zero build pipeline.
 
 :::card info
-支持数学公式、流程图、数据图表，可导出为 PNG、PDF、HTML 格式。
+这是一个功能展示页，涵盖 Md2Pic 支持的所有渲染能力。试试修改左侧内容，右侧会实时更新。
 :::
 
+## 数学公式
 
-## 适用场景
+行内公式：质能方程 $E = mc^2$，欧拉恒等式 $e^{i\pi} + 1 = 0$。
 
-- 技术文档可视化
-- 学术论文配图
-- 数据报告生成
-- 社交媒体海报
+块级公式：
 
-## 核心功能
+$$
+\nabla \times \mathbf{E} = -\frac{\partial \mathbf{B}}{\partial t}
+$$
 
-- **数学公式**：KaTeX 渲染，支持行内和块级公式
-- **图表支持**：Mermaid 流程图、ECharts 数据可视化
-- **多格式导出**：PNG 高清图片、PDF 文档、独立 HTML 文件
+$$
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+$$
 
-## 快速开始
+化学方程式：$\ce{2H2 + O2 -> 2H2O}$
 
-输入 Markdown，实时预览，一键导出！</textarea>
+## 流程图
+
+```mermaid
+graph LR
+    A[Markdown] --> B[marked.js]
+    B --> C{渲染器}
+    C --> D[KaTeX]
+    C --> E[Mermaid]
+    C --> F[ECharts]
+    D --> G[导出]
+    E --> G
+    F --> G
+```
+
+## 数据可视化
+
+```echarts
+{
+  "tooltip": {},
+  "xAxis": { "type": "category", "data": ["KaTeX", "Mermaid", "ECharts", "Prism", "html2canvas"] },
+  "yAxis": { "type": "value", "name": "使用频率" },
+  "series": [{ "type": "bar", "data": [95, 78, 65, 88, 100], "itemStyle": { "color": "#5B5BD6" } }]
+}
+```
+
+## 代码高亮
+
+```javascript
+async function exportToPNG(markdown) {
+  const dom = createExportNode(markdown);
+  await renderMath(dom);
+  await renderDiagrams(dom);
+  return html2canvas(dom, { scale: 2 });
+}
+```
+
+## 表格
+
+| 模式 | 说明 | 输出文件 |
+|------|------|----------|
+| 自由 | 单张图片，高度自适应 | `md2pic-{ts}.png` |
+| 小红书 | 3:4 分页，不截断元素 | `md2pic-xhs-*.png` |
+
+## Callout 卡片
+
+:::card success
+导出为 PNG / PDF / HTML，工具栏一键操作。
+:::
+
+:::card warning
+小红书模式下图表会单独占一页，避免跨页截断。
+:::
+
+> [!note] Obsidian 语法兼容
+> 同时支持 `:::card` 和 `> [!type]` 两种写法。</textarea>
                 </div>
             </div>
 
