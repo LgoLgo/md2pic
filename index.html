@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Md2Pic - Markdown to Picture</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260119">
+    <meta name="theme-color" content="#111111">
+    <meta name="description" content="Markdown 转图片工具，支持公式、图表、多格式导出">
+    <link rel="manifest" href="manifest.json?v=20260119">
+    <link rel="stylesheet" href="style.css?v=20260317">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- KaTeX CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <!-- Prism.js 代码高亮 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- KaTeX JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <!-- Mermaid JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <!-- ECharts JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <!-- Prism.js 代码高亮 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <!-- 顶部工具栏 -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <h1 class="brand">Md2Pic</h1>
+                <span class="subtitle">Markdown → Picture</span>
+                <div class="author-links">
+                    <a href="https://lanlance.cn" target="_blank" rel="noopener" class="author-link" title="lanlance.cn">
+                        <i class="fas fa-globe"></i>
+                    </a>
+                    <a href="https://github.com/L2ncE" target="_blank" rel="noopener" class="author-link" title="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+            <!-- 汉堡菜单按钮（移动端显示） -->
+            <button class="hamburger-btn" id="hamburgerBtn" title="菜单">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="toolbar-right" id="toolbarRight">
+                <div class="mode-group" id="modeGroup" title="导出模式">
+                    <button class="btn btn-secondary btn-toggle active" id="modeFreeBtn" data-mode="free">
+                        <span>自由</span>
+                    </button>
+                    <button class="btn btn-secondary btn-toggle" id="modeXhsBtn" data-mode="xhs">
+                        <span>小红书</span>
+                    </button>
+                </div>
+                <button class="btn btn-secondary" id="layoutBtn">
+                    <i class="fas fa-sliders-h"></i> 布局
+                </button>
+                <button class="btn btn-primary" id="exportPngBtn">
+                    <i class="fas fa-image"></i> 导出PNG
+                </button>
+                <button class="btn btn-secondary" id="exportPdfBtn">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button class="btn btn-secondary" id="exportHtmlBtn">
+                    <i class="fas fa-file-code"></i> HTML
+                </button>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 左侧编辑器 -->
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <h3>Markdown</h3>
+                    <div class="editor-tools">
+                        <button class="tool-btn" data-action="bold" title="粗体">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button class="tool-btn" data-action="italic" title="斜体">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button class="tool-btn" data-action="heading" title="标题">
+                            <i class="fas fa-heading"></i>
+                        </button>
+                        <button class="tool-btn" data-action="list" title="列表">
+                            <i class="fas fa-list"></i>
+                        </button>
+                        <button class="tool-btn" data-action="link" title="链接">
+                            <i class="fas fa-link"></i>
+                        </button>
+                        <button class="tool-btn" data-action="image" title="插入图片">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <div class="tool-separator"></div>
+                        <button class="tool-btn" data-action="flowchart" title="插入流程图">
+                            <i class="fas fa-project-diagram"></i>
+                        </button>
+                        <button class="tool-btn" data-action="sequence" title="插入序列图">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                        <button class="tool-btn" data-action="gantt" title="插入甘特图">
+                            <i class="fas fa-chart-gantt"></i>
+                        </button>
+                        <button class="tool-btn" data-action="pie" title="插入饼图">
+                            <i class="fas fa-chart-pie"></i>
+                        </button>
+                        <button class="tool-btn" data-action="echarts" title="插入ECharts图表">
+                            <i class="fas fa-chart-bar"></i>
+                        </button>
+                        <div class="tool-separator"></div>
+                        <button class="tool-btn" data-action="einstein" title="插入质能守恒公式">
+                            <i class="fas fa-atom"></i>
+                        </button>
+                        <button class="tool-btn" data-action="math" title="插入数学公式">
+                            <i class="fas fa-square-root-alt"></i>
+                        </button>
+                        <button class="tool-btn" data-action="physics" title="插入物理公式">
+                            <i class="fas fa-flask"></i>
+                        </button>
+                        <button class="tool-btn" data-action="chemistry" title="插入化学公式">
+                            <i class="fas fa-vial"></i>
+                        </button>
+                        <div class="tool-separator"></div>
+                        <button class="tool-btn" data-action="card" title="插入卡片">
+                            <i class="fas fa-id-card"></i>
+                        </button>
+                        <button class="tool-btn" data-action="callout" title="插入 Callout">
+                            <i class="fas fa-comment-dots"></i>
+                        </button>
+                        <button class="tool-btn" data-action="empty-line" title="加入空行">
+                            <i class="fas fa-paragraph"></i>
+                        </button>
+                        <button class="tool-btn" data-action="clear" title="清空">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- 隐藏的文件选择器 -->
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                <div class="editor-with-lines">
+                    <pre class="line-numbers" aria-hidden="true"></pre>
+                    <textarea id="markdownInput" placeholder="在这里输入你的 Markdown 内容..."># 欢迎使用 Md2Pic
+
+> Markdown 转图片工具
+
+:::card info
+支持数学公式、流程图、数据图表，可导出为 PNG、PDF、HTML 格式。
+:::
+
+
+## 适用场景
+
+- 技术文档可视化
+- 学术论文配图
+- 数据报告生成
+- 社交媒体海报
+
+## 核心功能
+
+- **数学公式**：KaTeX 渲染，支持行内和块级公式
+- **图表支持**：Mermaid 流程图、ECharts 数据可视化
+- **多格式导出**：PNG 高清图片、PDF 文档、独立 HTML 文件
+
+## 快速开始
+
+输入 Markdown，实时预览，一键导出！</textarea>
+                </div>
+            </div>
+
+            <!-- 右侧预览面板 -->
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <h3>预览</h3>
+                    <div class="preview-tools">
+                        <button class="tool-btn" id="zoomOut" title="缩小">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <span class="zoom-level">100%</span>
+                        <button class="tool-btn" id="zoomIn" title="放大">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="preview-container" id="previewContainer">
+                    <div class="preview-content" id="previewContent">
+                        <div class="markdown-poster" id="markdownPoster">
+                            <div class="poster-content" id="posterContent">
+                                <!-- Markdown 渲染内容将在这里显示 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文字布局设置面板 -->
+        <div class="background-panel" id="layoutPanel">
+            <div class="panel-content">
+                <h3>布局设置</h3>
+
+                <!-- 文字设置 -->
+                <div class="setting-section">
+                    <h4>文字</h4>
+                    <div class="option-group">
+                        <label>文字大小：</label>
+                        <div class="slider-group">
+                            <input type="range" id="fontSizeSlider" min="14" max="22" value="18" step="0.5">
+                            <span class="slider-value" id="fontSizeValue">18px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 布局设置 -->
+                <div class="setting-section">
+                    <h4>布局</h4>
+                    <div class="option-group">
+                        <label>整体宽度：</label>
+                        <div class="slider-group">
+                            <input type="range" id="widthSlider" min="480" max="800" value="640" step="20">
+                            <span class="slider-value" id="widthValue">640px</span>
+                        </div>
+                    </div>
+                    <div class="option-group">
+                        <label>卡片边距：</label>
+                        <div class="slider-group">
+                            <input type="range" id="paddingSlider" min="20" max="60" value="40" step="2.5">
+                            <span class="slider-value" id="paddingValue">40px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-actions">
+                    <button class="btn btn-secondary" id="cancelLayout">取消</button>
+                    <button class="btn btn-primary" id="applyLayout">应用</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 遮罩层 -->
+        <div class="overlay" id="overlay"></div>
+    </div>
+
+    <script src="script.js?v=20260317"></script>
+</body>
+
+</html>

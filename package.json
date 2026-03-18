@@ -1,0 +1,15 @@
+{
+  "name": "md2pic",
+  "version": "2.0.0",
+  "description": "Markdown 转图片工具",
+  "scripts": {
+    "start": "npx serve -s . -p 8080"
+  },
+  "bin": {
+    "md2pic": "./cli/index.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  },
+  "license": "MIT"
+}

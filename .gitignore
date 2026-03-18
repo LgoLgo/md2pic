@@ -1,21 +1,15 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# Claude 生成的文档
+/claude-md/
 
-# Test binary, built with `go test -c`
-*.test
+# Node modules (如果将来添加)
+node_modules/
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-.idea
+# 系统文件
 .DS_Store
-.vscode
-tmp
-*.log
+Thumbs.db
+
+# IDE 配置
+.idea/
+.vscode/
+*.swp
+*.swo
