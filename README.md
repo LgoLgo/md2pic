@@ -37,6 +37,8 @@ Md2Pic 是一个运行在浏览器端的 Markdown 可视化导出工具。输入
   <img src="img/web.png" width="100%" alt="Md2Pic 界面截图">
 </p>
 
+#### 小红书模式导出
+
 <p align="center">
   <img src="img/md2pic-xhs-1.png" width="30%" alt="小红书导出 - 第1页">&nbsp;
   <img src="img/md2pic-xhs-2.png" width="30%" alt="小红书导出 - 第2页">&nbsp;
