@@ -6,7 +6,8 @@ const AppState = {
     padding: 40,
     width: 640,
     mode: 'free', // 'free' | 'xhs'
-    fixedHeights: { xhs: null }
+    fixedHeights: { xhs: null },
+    watermark: 'LanLance'
 };
 
 // 状态管理器
@@ -51,6 +52,7 @@ let currentPadding = AppState.padding;
 let currentWidth = AppState.width;
 let currentMode = AppState.mode;
 let fixedHeights = AppState.fixedHeights;
+let currentWatermark = AppState.watermark;
 
 // ===== 工具函数 =====
 
@@ -236,7 +238,8 @@ function autoSave(content) {
             fontSize: typeof currentFontSize !== 'undefined' ? currentFontSize : 18,
             width: typeof currentWidth !== 'undefined' ? currentWidth : 640,
             padding: typeof currentPadding !== 'undefined' ? currentPadding : 40,
-            mode: typeof currentMode !== 'undefined' ? currentMode : 'free'
+            mode: typeof currentMode !== 'undefined' ? currentMode : 'free',
+            watermark: typeof currentWatermark !== 'undefined' ? currentWatermark : 'LanLance'
         }));
     } catch (e) {
         console.warn('自动保存失败:', e);
@@ -1020,30 +1023,41 @@ function applyPreviewModeFrame() {
 
         // 收集分页断点（与 exportXhsPages 逻辑一致）
         const dividerYs = [];
-        let textPageStart = 0;
-        let textPageUsedBottom = 0;
+        let pageStart = 0;
+        let pageUsedBottom = 0;
 
         const children = Array.from(posterContent.children);
-        for (const child of children) {
-            const isChart = child.classList.contains('mermaid-container') ||
-                            child.classList.contains('echarts-container');
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
             const childRect = child.getBoundingClientRect();
             const childTop = childRect.top - posterRect.top;
             const childBottom = childRect.bottom - posterRect.top;
+            const childHeight = childBottom - childTop;
 
-            if (isChart) {
-                if (textPageUsedBottom > textPageStart) {
-                    dividerYs.push(childTop); // 图表前断页
-                }
-                dividerYs.push(childBottom);  // 图表后断页
-                textPageStart = childBottom;
-                textPageUsedBottom = childBottom;
-            } else {
-                if (childBottom > textPageStart + pageHeight && childTop > textPageStart) {
+            if (childHeight > pageHeight) {
+                // 超大元素：前后都断页
+                if (pageUsedBottom > pageStart) {
                     dividerYs.push(childTop);
-                    textPageStart = childTop;
                 }
-                textPageUsedBottom = Math.max(textPageUsedBottom, childBottom);
+                dividerYs.push(childBottom);
+                pageStart = childBottom;
+                pageUsedBottom = childBottom;
+            } else if (childBottom > pageStart + pageHeight && childTop > pageStart) {
+                dividerYs.push(childTop);
+                pageStart = childTop;
+                pageUsedBottom = Math.max(pageStart, childBottom);
+            } else {
+                // 孤行标题检测：标题在页末但下一个元素会到下一页 → 把标题也移过去
+                const isHeading = /^H[1-6]$/.test(child.tagName);
+                if (isHeading && i + 1 < children.length) {
+                    const nextRect = children[i + 1].getBoundingClientRect();
+                    const nextBottom = nextRect.bottom - posterRect.top;
+                    if (nextBottom > pageStart + pageHeight && childTop > pageStart) {
+                        dividerYs.push(childTop);
+                        pageStart = childTop;
+                    }
+                }
+                pageUsedBottom = Math.max(pageUsedBottom, childBottom);
             }
         }
 
@@ -1188,6 +1202,14 @@ async function updatePreview() {
     // 预处理数学公式
     let processedMarkdown = mathRenderer.preprocessMath(markdownText);
 
+    // 保护块级 $$...$$ 公式，避免 marked 的 breaks:true 将换行变为 <br> 破坏 KaTeX 匹配
+    const mathBlocks = [];
+    processedMarkdown = processedMarkdown.replace(/\$\$([\s\S]*?)\$\$/g, (match) => {
+        const idx = mathBlocks.length;
+        mathBlocks.push(match);
+        return `<div class="katex-block-placeholder" data-math-idx="${idx}"></div>`;
+    });
+
     // 预处理图表
     processedMarkdown = diagramRenderer.preprocessDiagram(processedMarkdown);
 
@@ -1223,6 +1245,19 @@ async function updatePreview() {
         }
     }
     posterContent.innerHTML = htmlContent;
+
+    // 还原被保护的块级 $$...$$ 公式
+    if (mathBlocks.length > 0) {
+        posterContent.querySelectorAll('.katex-block-placeholder').forEach(el => {
+            const idx = parseInt(el.getAttribute('data-math-idx'), 10);
+            if (mathBlocks[idx] !== undefined) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'katex-block-restored';
+                wrapper.textContent = mathBlocks[idx];
+                el.replaceWith(wrapper);
+            }
+        });
+    }
 
     // 渲染数学公式
     mathRenderer.renderMath(posterContent);
@@ -1397,10 +1432,16 @@ function applyLayoutSettings() {
     currentWidth = parseInt(document.getElementById('widthSlider').value);
     applyWidth(currentWidth);
 
+    // 应用水印设置
+    const wmInput = document.getElementById('watermarkInput');
+    if (wmInput) {
+        currentWatermark = wmInput.value.trim();
+    }
+
     closeLayoutPanel();
 
     // 显示成功提示
-    showNotification('文字布局设置已更新！', 'success');
+    showNotification('设置已更新！', 'success');
 }
 
 function applyFontSize(fontSize) {
@@ -1706,6 +1747,27 @@ async function exportToPNG() {
         }
         const outputCanvas = trimmedCanvas || canvas;
 
+        // 自由模式水印（左上角，Supreme 贴纸风格）
+        if (currentWatermark) {
+            const wmCtx = outputCanvas.getContext('2d');
+            const wmScale = outputCanvas.width / (currentWidth || 640);
+            const wmFontSize = Math.round(13 * wmScale);
+            wmCtx.font = `700 italic ${wmFontSize}px 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace`;
+            const textMetrics = wmCtx.measureText(currentWatermark);
+            const padH = Math.round(6 * wmScale);
+            const padV = Math.round(3 * wmScale);
+            const boxX = Math.round(8 * wmScale);
+            const boxY = Math.round(8 * wmScale);
+            const boxW = textMetrics.width + padH * 2;
+            const boxH = wmFontSize + padV * 2;
+            wmCtx.fillStyle = 'rgba(17,17,17,0.82)';
+            wmCtx.fillRect(boxX, boxY, boxW, boxH);
+            wmCtx.fillStyle = '#ffffff';
+            wmCtx.textAlign = 'left';
+            wmCtx.textBaseline = 'middle';
+            wmCtx.fillText(currentWatermark, boxX + padH, boxY + boxH / 2);
+        }
+
         // 增强 toDataURL 错误处理
         let dataUrl;
         try {
@@ -1832,59 +1894,57 @@ async function exportXhsPages() {
         await new Promise(r => requestAnimationFrame(r));
 
         // 计算分页切割点
-        // 策略：
-        //   - 图表元素（mermaid/echarts）：强制单独一页，前后都分页，页高自适应图表高度（上限 pageHeight）
-        //   - 文字元素：装不下整体挪下一页，不截断
-        // 使用 getBoundingClientRect 相对 exportNode 计算精确坐标
+        // 策略：所有元素统一处理，不截断任何元素。
+        //   - 当前页放不下整个元素 → 在该元素前分页
+        //   - 超大元素（高度 > pageHeight，如巨型图表）→ 单独占一页，高度自适应
         const contentEl = exportNode.querySelector('.poster-content');
         const exportNodeRect = exportNode.getBoundingClientRect();
 
         // pages 数组：每项 { startY, endY }，表示截图的 y 区间
         const pages = [];
-        let textPageStart = 0;       // 当前文字页起点
-        let textPageUsedBottom = 0;  // 当前文字页已用到的底部 y
-
-        const flushTextPage = (upTo) => {
-            // 结束当前文字页，截到 upTo（即下一个图表的顶部或内容结束）
-            if (upTo > textPageStart) {
-                pages.push({ startY: textPageStart, endY: Math.min(upTo, textPageStart + pageHeight) });
-            }
-        };
+        let pageStart = 0;       // 当前页起点
+        let pageUsedBottom = 0;  // 当前页已用到的底部 y
 
         if (contentEl) {
             const children = Array.from(contentEl.children);
-            for (const child of children) {
-                const isChart = child.classList.contains('mermaid-container') ||
-                                child.classList.contains('echarts-container');
+            for (let i = 0; i < children.length; i++) {
+                const child = children[i];
                 const childRect = child.getBoundingClientRect();
                 const childTop = childRect.top - exportNodeRect.top;
                 const childBottom = childRect.bottom - exportNodeRect.top;
+                const childHeight = childBottom - childTop;
 
-                if (isChart) {
-                    // 1. 结束当前文字页（截到图表顶部）
-                    if (textPageUsedBottom > textPageStart) {
-                        pages.push({ startY: textPageStart, endY: childTop });
+                if (childHeight > pageHeight) {
+                    // 超大元素：先结束当前页，然后单独占一页
+                    if (pageUsedBottom > pageStart) {
+                        pages.push({ startY: pageStart, endY: childTop });
                     }
-                    // 2. 图表单独一页，高度自适应（不超过 pageHeight）
-                    const chartPageHeight = Math.min(childBottom - childTop, pageHeight);
-                    pages.push({ startY: childTop, endY: childTop + chartPageHeight });
-                    // 3. 下一个文字页从图表底部开始
-                    textPageStart = childBottom;
-                    textPageUsedBottom = childBottom;
+                    pages.push({ startY: childTop, endY: childBottom });
+                    pageStart = childBottom;
+                    pageUsedBottom = childBottom;
+                } else if (childBottom > pageStart + pageHeight && childTop > pageStart) {
+                    // 当前页放不下 → 在此元素前分页
+                    pages.push({ startY: pageStart, endY: childTop });
+                    pageStart = childTop;
+                    pageUsedBottom = Math.max(pageStart, childBottom);
                 } else {
-                    // 文字元素：装不下就整体挪到新页
-                    if (childBottom > textPageStart + pageHeight && childTop > textPageStart) {
-                        // 先结束当前文字页
-                        pages.push({ startY: textPageStart, endY: childTop });
-                        textPageStart = childTop;
+                    // 孤行标题检测：标题在页末但下一个元素会到下一页 → 把标题也移过去
+                    const isHeading = /^H[1-6]$/.test(child.tagName);
+                    if (isHeading && i + 1 < children.length) {
+                        const nextRect = children[i + 1].getBoundingClientRect();
+                        const nextBottom = nextRect.bottom - exportNodeRect.top;
+                        if (nextBottom > pageStart + pageHeight && childTop > pageStart) {
+                            pages.push({ startY: pageStart, endY: childTop });
+                            pageStart = childTop;
+                        }
                     }
-                    textPageUsedBottom = Math.max(textPageUsedBottom, childBottom);
+                    pageUsedBottom = Math.max(pageUsedBottom, childBottom);
                 }
             }
         }
-        // 最后一段文字页
-        if (textPageUsedBottom > textPageStart) {
-            pages.push({ startY: textPageStart, endY: textPageUsedBottom });
+        // 最后一页
+        if (pageUsedBottom > pageStart) {
+            pages.push({ startY: pageStart, endY: pageUsedBottom });
         }
         // 兜底：没有任何内容
         if (pages.length === 0) {
@@ -1989,19 +2049,39 @@ async function exportXhsPages() {
             ctx.drawImage(contentCanvas, drawX, drawY, drawW, drawH);
             ctx.restore();
 
+            // 水印（左上角，Supreme 贴纸风格）
+            if (currentWatermark) {
+                const wmFontSize = Math.round(14 * scale);
+                ctx.font = `700 italic ${wmFontSize}px 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace`;
+                const wmMetrics = ctx.measureText(currentWatermark);
+                const wmPadH = Math.round(7 * scale);
+                const wmPadV = Math.round(4 * scale);
+                const wmBoxX = Math.round(14 * scale);
+                const wmBoxY = Math.round(12 * scale);
+                const wmBoxW = wmMetrics.width + wmPadH * 2;
+                const wmBoxH = wmFontSize + wmPadV * 2;
+                ctx.fillStyle = 'rgba(17,17,17,0.82)';
+                ctx.fillRect(wmBoxX, wmBoxY, wmBoxW, wmBoxH);
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(currentWatermark, wmBoxX + wmPadH, wmBoxY + wmBoxH / 2);
+            }
+
             // 页码（右下角，相对白布）
             const text = `${i + 1}/${totalPages}`;
             const fontSize = Math.round(20 * scale);
             ctx.font = `${fontSize}px 'JetBrains Mono', 'Courier New', monospace`;
             ctx.fillStyle = 'rgba(0,0,0,0.28)';
             ctx.textAlign = 'right';
+            ctx.textBaseline = 'alphabetic';
             ctx.fillText(text, finalWidth - Math.round(16 * scale), finalHeight - Math.round(14 * scale));
 
             const canvas = finalCanvas;
 
             const dataUrl = canvas.toDataURL('image/png', 1.0);
             const link = document.createElement('a');
-            link.download = `md2pic-xhs-${i + 1}.png`;
+            link.download = `md2pic-xhs-${getFormattedTimestamp()}-${i + 1}.png`;
             link.href = dataUrl;
             document.body.appendChild(link);
             link.click();
@@ -3274,6 +3354,11 @@ function restoreDraft() {
         }
         if (settings.mode && typeof switchMode === 'function') {
             // 稍后在 DOM 准备好后切换模式
+        }
+        if (typeof settings.watermark === 'string') {
+            currentWatermark = settings.watermark;
+            const wmInput = document.getElementById('watermarkInput');
+            if (wmInput) wmInput.value = currentWatermark;
         }
     }
 }

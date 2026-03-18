@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="favicon.svg" width="80" height="80" alt="md2pic">
+  <img src="img/favicon.svg" width="80" height="80" alt="md2pic">
 </p>
 
 <h1 align="center">Md2Pic</h1>
@@ -30,6 +30,18 @@ Md2Pic 是一个运行在浏览器端的 Markdown 可视化导出工具。输入
 内置 KaTeX 数学公式、Mermaid 图表、ECharts 数据可视化和 Callout 卡片渲染能力。提供自由导出和小红书 3:4 分页两种模式，分页时保证元素完整性，不做跨页截断。
 
 全部逻辑在客户端完成，无服务端依赖。所有第三方库通过 CDN 按需加载，项目本身不依赖任何构建工具链。
+
+### 预览
+
+<p align="center">
+  <img src="img/web.png" width="100%" alt="Md2Pic 界面截图">
+</p>
+
+<p align="center">
+  <img src="img/md2pic-xhs-1.png" width="30%" alt="小红书导出 - 第1页">&nbsp;
+  <img src="img/md2pic-xhs-2.png" width="30%" alt="小红书导出 - 第2页">&nbsp;
+  <img src="img/md2pic-xhs-3.png" width="30%" alt="小红书导出 - 第3页">
+</p>
 
 ## 快速开始
 
