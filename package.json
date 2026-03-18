@@ -11,5 +11,5 @@
   "dependencies": {
     "puppeteer": "^21.0.0"
   },
-  "license": "MIT"
+  "license": "Apache-2.0"
 }
