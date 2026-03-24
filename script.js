@@ -688,7 +688,7 @@ class CardRenderer {
         });
 
         // 处理 Obsidian Callout 语法：> [!type][-] title（忽略折叠标记，始终展开）
-        result = result.replace(/^>\s*\[!(\w+)\](-?)\s*(.*?)\n((?:^>.*\n?)*)/gm, (match, type, collapsible, title, content) => {
+        result = result.replace(/^>\s*\[!(\w+)\]([+\-]?)\s*(.*?)\n((?:^>.*\n?)*)/gm, (match, type, collapsible, title, content) => {
             const cardId = 'card-' + Math.random().toString(36).substr(2, 9);
             const cleanContent = content.replace(/^>\s?/gm, '').trim();
             const isCollapsible = false;
