@@ -709,7 +709,7 @@ class CardRenderer {
                          data-card-type="${cardType}"
                          data-card-title="${encodeURIComponent(displayTitle)}"
                          data-collapsible="${isCollapsible}"
-                         data-card-content="${encodeURIComponent(cleanContent)}"></div>`;
+                         data-card-content="${encodeURIComponent(cleanContent)}"></div>\n\n`;
         });
 
         return result;
