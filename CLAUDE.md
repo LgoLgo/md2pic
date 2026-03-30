@@ -153,6 +153,61 @@ md2pic/
 3. **新增图表类型**：在 `MarkdownHelper` 中添加模板，工具栏按钮绑定在 `handleToolbarAction`
 4. **修改分页逻辑**：预览分页线（`applyPreviewModeFrame`）和导出分页（`exportXhsPages`）须保持同步
 
+## 测试策略
+
+### 运行测试
+```bash
+npm test                                              # 运行全部 E2E 测试
+npx jest --watch                                      # 监听模式（开发时）
+npx jest tests/e2e/free-mode.test.js --verbose       # 单文件
+```
+
+### 测试结构
+```
+tests/
+  e2e/
+    free-mode.test.js   # 自由模式：输出文件存在、是有效 PNG
+    xhs-mode.test.js    # 小红书模式：多页输出、自动创建目录
+    watermark.test.js   # --watermark 参数透传
+    error.test.js       # 空文件等边界情况
+  fixtures/
+    simple.md           # 标准测试用 Markdown
+  setup.js              # Jest setupFiles，自动检测系统 Chrome
+```
+
+### AI Native 开发约定
+- **每次功能变更必须同步更新测试**：新增 CLI 参数 → 新增对应测试用例
+- **CI 强制**：PR 必须通过全部测试才能合并，deploy 依赖 test job
+- **测试优先**：先写失败测试，再实现功能
+
+## CLI 参数完整说明
+
+```bash
+md2pic <input.md> [output]                        # 自由模式，输出单张 PNG
+md2pic <input.md> [outDir] --xhs                  # 小红书模式，输出多张 PNG
+md2pic <input.md> [output] --watermark "署名"     # 指定水印文字
+```
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `input.md` | 输入 Markdown 文件 | 必填 |
+| `output` | 自由模式输出文件路径 | `md2pic-{timestamp}.png` |
+| `outDir` | 小红书模式输出目录 | 当前目录 |
+| `--xhs` | 启用小红书 3:4 分页模式 | 关闭 |
+| `--watermark <text>` | 左上角水印署名 | `LanLance` |
+
+## Claude Code Skill：md2xhs
+
+在任意目录将 Markdown 文件导出为小红书图片：
+
+```
+/md2xhs note.md          # 图片输出到 note.md 同目录
+/md2xhs note.md ./out    # 指定输出目录
+```
+
+Skill 文件位于 `skills/md2xhs.md`，需复制到 `~/.claude/skills/` 后生效。
+前置条件：全局安装 `md2pic`（`npm install -g md2pic`）。
+
 ### 常见问题
 
 #### 导出图片跨域错误
