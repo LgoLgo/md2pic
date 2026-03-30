@@ -11,10 +11,14 @@ const path = require('path');
  * @returns {{ browser, page }}
  */
 async function launchAndLoad(mdContent) {
-    const browser = await puppeteer.launch({
+    const launchOptions = {
         headless: 'new',
         args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+    };
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    }
+    const browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
 
     // 加载本地 index.html（使用 file:// 协议）
