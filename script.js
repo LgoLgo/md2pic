@@ -878,18 +878,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // 初始化应用
 function initializeApp() {
-    // 配置 marked 选项
-    marked.setOptions({
+    // 配置 marked 选项（marked v5+ 使用 marked.use，setOptions 已废弃）
+    marked.use({
         breaks: true,
         gfm: true,
-        sanitize: false,
-        highlight: function (code, lang) {
-            return code;
-        }
-    });
-
-    // 自定义渲染器：确保 hr 正确输出（marked v5+ 签名为 hr(token)）
-    marked.use({
         renderer: {
             hr(token) {
                 return '<hr class="md-hr">\n';
@@ -1218,6 +1210,24 @@ async function updatePreview() {
 
     // 预处理卡片
     processedMarkdown = cardRenderer.preprocessCards(processedMarkdown);
+
+    // 将连续多个空行转为对应数量的 <br>（先保护代码块，避免破坏其内容）
+    const codeBlocks = [];
+    processedMarkdown = processedMarkdown.replace(/```[\s\S]*?```/g, (match) => {
+        const idx = codeBlocks.length;
+        codeBlocks.push(match);
+        return `<code-block-placeholder data-code-idx="${idx}"></code-block-placeholder>`;
+    });
+    processedMarkdown = processedMarkdown.replace(/(\n\s*){3,}/g, (match) => {
+        const count = (match.match(/\n/g) || []).length - 2;
+        return '\n\n' + '<br>'.repeat(count) + '\n\n';
+    });
+    codeBlocks.forEach((block, idx) => {
+        processedMarkdown = processedMarkdown.replace(
+            `<code-block-placeholder data-code-idx="${idx}"></code-block-placeholder>`,
+            block
+        );
+    });
 
     // 确保 --- 分割线前后有空行（避免被识别为 Setext 标题下划线）
     processedMarkdown = processedMarkdown.replace(/([^\n])\n(---+)\n/g, '$1\n\n$2\n\n');
