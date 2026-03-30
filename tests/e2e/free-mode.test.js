@@ -9,6 +9,10 @@ const FIXTURE = path.resolve(__dirname, '../fixtures/simple.md');
 describe('自由模式导出', () => {
   let tmpDir;
 
+  beforeAll(() => {
+    if (!fs.existsSync(FIXTURE)) throw new Error(`Fixture 不存在: ${FIXTURE}`);
+  });
+
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'md2pic-test-'));
   });

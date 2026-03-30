@@ -4,10 +4,15 @@
  */
 const fs = require('fs');
 
-const SYSTEM_CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const CANDIDATES = [
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // macOS
+  '/usr/bin/google-chrome',       // Linux CI (GitHub Actions)
+  '/usr/bin/google-chrome-stable',
+  '/usr/bin/chromium-browser',    // Ubuntu
+  '/usr/bin/chromium',            // Debian/Alpine
+];
 
 if (!process.env.PUPPETEER_EXECUTABLE_PATH) {
-  if (fs.existsSync(SYSTEM_CHROME)) {
-    process.env.PUPPETEER_EXECUTABLE_PATH = SYSTEM_CHROME;
-  }
+  const found = CANDIDATES.find(p => fs.existsSync(p));
+  if (found) process.env.PUPPETEER_EXECUTABLE_PATH = found;
 }

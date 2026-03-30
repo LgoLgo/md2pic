@@ -34,7 +34,7 @@ async function launchAndLoad(mdContent) {
     }, mdContent);
 
     // 等待渲染完成（Mermaid / ECharts 可能需要额外时间）
-    await page.waitForTimeout(1500);
+    await new Promise(r => setTimeout(r, 1500));
 
     return { browser, page };
 }
@@ -53,7 +53,7 @@ async function exportFree(mdFile, outFile) {
         await page.evaluate(() => {
             if (typeof setMode === 'function') setMode('free');
         });
-        await page.waitForTimeout(300);
+        await new Promise(r => setTimeout(r, 300));
 
         // 暴露文件保存函数到页面
         const savedFiles = [];
@@ -88,12 +88,12 @@ async function exportFree(mdFile, outFile) {
         await page.evaluate(() => {
             if (typeof exportToPNG === 'function') return exportToPNG();
         });
-        await page.waitForTimeout(3000);
+        await new Promise(r => setTimeout(r, 3000));
 
         if (savedFiles.length > 0) {
             console.log(`✓ 导出成功: ${savedFiles[0]}`);
         } else {
-            console.error('✗ 导出失败：未生成文件');
+            throw new Error('导出失败：未生成文件');
         }
     } finally {
         await browser.close();
@@ -114,7 +114,7 @@ async function exportXhs(mdFile, outDir) {
         await page.evaluate(() => {
             if (typeof setMode === 'function') setMode('xhs');
         });
-        await page.waitForTimeout(300);
+        await new Promise(r => setTimeout(r, 300));
 
         // 确保输出目录存在
         const resolvedDir = path.resolve(outDir || '.');
@@ -152,13 +152,13 @@ async function exportXhs(mdFile, outDir) {
             if (typeof exportXhsPages === 'function') return exportXhsPages();
             if (typeof exportToPNG === 'function') return exportToPNG();
         });
-        await page.waitForTimeout(5000);
+        await new Promise(r => setTimeout(r, 5000));
 
         if (savedFiles.length > 0) {
             console.log(`✓ 导出成功：共 ${savedFiles.length} 张`);
             savedFiles.forEach(f => console.log(`  ${f}`));
         } else {
-            console.error('✗ 导出失败：未生成文件');
+            throw new Error('导出失败：未生成文件');
         }
     } finally {
         await browser.close();
