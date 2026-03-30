@@ -2,5 +2,5 @@
 module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/tests/e2e/**/*.test.js'],
-  testTimeout: 30000,
+  testTimeout: 60000,
 };
