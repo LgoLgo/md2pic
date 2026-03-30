@@ -31,14 +31,21 @@ md2pic - Markdown 转图片工具
              小红书模式：输出目录（默认当前目录）
 
 选项:
-  --xhs      小红书 3:4 多页分页模式
-  -h, --help 显示帮助信息
+  --xhs               小红书 3:4 多页分页模式
+  --watermark <text>  设置左上角水印署名
+  -h, --help          显示帮助信息
 `);
     process.exit(0);
 }
 
 const isXhs = args.includes('--xhs');
-const positional = args.filter(a => !a.startsWith('--'));
+const watermarkIdx = args.indexOf('--watermark');
+const watermark = watermarkIdx !== -1 ? args[watermarkIdx + 1] : undefined;
+const positional = args.filter((a, i) => {
+    if (a.startsWith('--')) return false;
+    if (i > 0 && args[i - 1] === '--watermark') return false;
+    return true;
+});
 
 const inputFile = positional[0];
 const outputTarget = positional[1];
@@ -58,11 +65,11 @@ if (!fs.existsSync(inputFile)) {
         if (isXhs) {
             const outDir = outputTarget || '.';
             console.log(`[md2pic] 小红书模式: ${inputFile} → ${path.resolve(outDir)}/`);
-            await exportXhs(inputFile, outDir);
+            await exportXhs(inputFile, outDir, { watermark });
         } else {
             const outFile = outputTarget || `md2pic-${Date.now()}.png`;
             console.log(`[md2pic] 自由模式: ${inputFile} → ${path.resolve(outFile)}`);
-            await exportFree(inputFile, outFile);
+            await exportFree(inputFile, outFile, { watermark });
         }
     } catch (err) {
         console.error('导出失败:', err.message);

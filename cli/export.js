@@ -43,12 +43,21 @@ async function launchAndLoad(mdContent) {
  * 自由模式：导出单张完整图
  * @param {string} mdFile  输入 Markdown 文件路径
  * @param {string} outFile 输出 PNG 文件路径
+ * @param {object} options 选项 { watermark?: string }
  */
-async function exportFree(mdFile, outFile) {
+async function exportFree(mdFile, outFile, options = {}) {
     const mdContent = fs.readFileSync(mdFile, 'utf-8');
     const { browser, page } = await launchAndLoad(mdContent);
 
     try {
+        if (options.watermark !== undefined) {
+            await page.evaluate((wm) => {
+                currentWatermark = wm;
+                const input = document.getElementById('watermarkInput');
+                if (input) input.value = wm;
+            }, options.watermark);
+        }
+
         // 确保是自由模式
         await page.evaluate(() => {
             if (typeof setMode === 'function') setMode('free');
@@ -104,12 +113,21 @@ async function exportFree(mdFile, outFile) {
  * 小红书模式：导出多张分页图
  * @param {string} mdFile  输入 Markdown 文件路径
  * @param {string} outDir  输出目录
+ * @param {object} options 选项 { watermark?: string }
  */
-async function exportXhs(mdFile, outDir) {
+async function exportXhs(mdFile, outDir, options = {}) {
     const mdContent = fs.readFileSync(mdFile, 'utf-8');
     const { browser, page } = await launchAndLoad(mdContent);
 
     try {
+        if (options.watermark !== undefined) {
+            await page.evaluate((wm) => {
+                currentWatermark = wm;
+                const input = document.getElementById('watermarkInput');
+                if (input) input.value = wm;
+            }, options.watermark);
+        }
+
         // 切换到小红书模式
         await page.evaluate(() => {
             if (typeof setMode === 'function') setMode('xhs');
