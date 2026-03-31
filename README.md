@@ -114,9 +114,10 @@ md2pic --help
 # 1. 安装 CLI（前置条件）
 npm install -g md2pic
 
-# 2. 安装 Skill
-curl -o ~/.claude/skills/md2xhs.md \
-  https://raw.githubusercontent.com/LgoLgo/md2pic/main/skills/md2xhs.md
+# 2. 安装 Skill（复制文件夹到 ~/.claude/skills/）
+cp -r skills/md2xhs ~/.claude/skills/md2xhs
+# 或直接下载：
+# git clone --depth=1 https://github.com/LgoLgo/md2pic /tmp/md2pic && cp -r /tmp/md2pic/skills/md2xhs ~/.claude/skills/md2xhs
 
 # 3. 在 Claude Code 中使用
 /md2xhs note.md           # 输出到 note.md 同目录
