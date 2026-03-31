@@ -77,23 +77,51 @@ index.html  script.js  style.css  favicon.svg  manifest.json
 基于 Puppeteer 的命令行导出工具，支持无头模式和批量处理：
 
 ```bash
-# 安装
-npm install          # 安装 puppeteer 依赖
-npm install -g .     # 全局注册 md2pic 命令
+# 安装（推荐全局安装）
+npm install -g md2pic
 
 # 自由模式 → 单张 PNG
 md2pic input.md output.png
-md2pic input.md                      # 自动生成文件名
+md2pic input.md                               # 自动生成文件名
 
 # 小红书模式 → 3:4 多页 PNG
 md2pic input.md ./out --xhs
-md2pic input.md --xhs                # 输出至当前目录
+md2pic input.md --xhs                         # 输出至当前目录
+
+# 指定水印署名
+md2pic input.md ./out --xhs --watermark "LanLance"
+md2pic input.md output.png --watermark "LanLance"
 
 # 查看帮助
 md2pic --help
 ```
 
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `input.md` | 输入 Markdown 文件 | 必填 |
+| `output` | 自由模式输出路径 | `md2pic-{timestamp}.png` |
+| `outDir` | 小红书模式输出目录 | 当前目录 |
+| `--xhs` | 小红书 3:4 分页模式 | 关闭 |
+| `--watermark <text>` | 左上角水印署名 | `LanLance` |
+
 工作原理：启动无头 Chrome → 加载本地 `index.html` → 注入 Markdown 内容 → 截图导出。全程离线，不依赖网络。
+
+### Claude Code Skill：md2xhs
+
+配合 [Claude Code](https://claude.ai/code) 使用，在任意目录一条命令导出小红书图片：
+
+```bash
+# 1. 安装 CLI（前置条件）
+npm install -g md2pic
+
+# 2. 安装 Skill
+curl -o ~/.claude/skills/md2xhs.md \
+  https://raw.githubusercontent.com/LgoLgo/md2pic/main/skills/md2xhs.md
+
+# 3. 在 Claude Code 中使用
+/md2xhs note.md           # 输出到 note.md 同目录
+/md2xhs note.md ./images  # 指定输出目录
+```
 
 ## 语法参考
 
