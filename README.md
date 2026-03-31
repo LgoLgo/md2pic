@@ -18,6 +18,7 @@
 <p align="center">
   <a href="https://lgolgo.github.io/md2pic">在线使用</a> ·
   <a href="#cli">CLI</a> ·
+  <a href="#claude-code-skill">Claude Code Skill</a> ·
   <a href="CHANGELOG.md">更新日志</a>
 </p>
 
@@ -74,12 +75,13 @@ index.html  script.js  style.css  favicon.svg  manifest.json
 
 ## CLI
 
-基于 Puppeteer 的命令行导出工具，支持无头模式和批量处理：
+基于 Puppeteer 的命令行导出工具，启动无头 Chrome → 注入 Markdown → 截图导出，全程离线。
 
 ```bash
-# 安装（推荐全局安装）
 npm install -g md2pic
+```
 
+```bash
 # 自由模式 → 单张 PNG
 md2pic input.md output.png
 md2pic input.md                               # 自动生成文件名
@@ -90,7 +92,6 @@ md2pic input.md --xhs                         # 输出至当前目录
 
 # 指定水印署名
 md2pic input.md ./out --xhs --watermark "LanLance"
-md2pic input.md output.png --watermark "LanLance"
 
 # 查看帮助
 md2pic --help
@@ -104,24 +105,27 @@ md2pic --help
 | `--xhs` | 小红书 3:4 分页模式 | 关闭 |
 | `--watermark <text>` | 左上角水印署名 | `LanLance` |
 
-工作原理：启动无头 Chrome → 加载本地 `index.html` → 注入 Markdown 内容 → 截图导出。全程离线，不依赖网络。
+## Claude Code Skill
 
-### Claude Code Skill：md2xhs
+配合 [Claude Code](https://claude.ai/code) 使用，在任意目录输入 `/md2xhs` 即可导出小红书图片，无需记忆命令参数。
 
-配合 [Claude Code](https://claude.ai/code) 使用，在任意目录一条命令导出小红书图片：
+**安装：**
 
 ```bash
 # 1. 安装 CLI（前置条件）
 npm install -g md2pic
 
-# 2. 安装 Skill（复制文件夹到 ~/.claude/skills/）
-cp -r skills/md2xhs ~/.claude/skills/md2xhs
-# 或直接下载：
-# git clone --depth=1 https://github.com/LgoLgo/md2pic /tmp/md2pic && cp -r /tmp/md2pic/skills/md2xhs ~/.claude/skills/md2xhs
+# 2. 安装 Skill
+git clone --depth=1 https://github.com/LgoLgo/md2pic /tmp/md2pic
+cp -r /tmp/md2pic/skills/md2xhs ~/.claude/skills/md2xhs
+```
 
-# 3. 在 Claude Code 中使用
-/md2xhs note.md           # 输出到 note.md 同目录
-/md2xhs note.md ./images  # 指定输出目录
+**使用：**
+
+```
+/md2xhs note.md                    # 输出到 note.md 同目录
+/md2xhs note.md ./images           # 指定输出目录
+/md2xhs note.md --watermark "署名" # 带水印
 ```
 
 ## 语法参考
